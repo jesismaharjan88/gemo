@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# others
+BRIEF.md
+*:Zone.Identifier
+AGENTS.md
+CLAUDE.md
