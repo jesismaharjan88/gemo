@@ -21,6 +21,13 @@ export async function createClient() {
           }
         },
       },
+      global: {
+        // Force every Supabase API fetch to bypass the Next.js Data Cache.
+        // Without this, router.refresh() re-renders server components but
+        // gets cached PostgREST responses → same RSC payload → no DOM update.
+        fetch: (url, options = {}) =>
+          fetch(url, { ...options, cache: "no-store" }),
+      },
     }
   );
 }
