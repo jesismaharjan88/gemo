@@ -10,6 +10,7 @@ const TABS = [
   { label: "Tally", path: (id: string) => `/dashboard/events/${id}/tally` },
   { label: "By person", path: (id: string) => `/dashboard/events/${id}/by-person` },
   { label: "Share", path: (id: string) => `/dashboard/events/${id}/share` },
+  { label: "Export", path: (id: string) => `/dashboard/events/${id}/export` },
 ];
 
 export default function TabsNav({ eventId }: Props) {

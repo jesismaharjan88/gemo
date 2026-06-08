@@ -37,6 +37,32 @@ html {
   color: var(--text);
 }
 
+@media print {
+  @page {
+    margin: 20mm;
+    size: A4;
+  }
+
+  body {
+    background-color: #fff !important;
+    color: #000 !important;
+    font-size: 11pt;
+  }
+
+  /* Collapse the layout chrome — only the export artifact shows */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Remove card backgrounds and borders for clean paper output */
+  #export-artifact {
+    background-color: #fff !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
 body {
   font-family: var(--font-dm-sans), DM Sans, sans-serif;
   background-color: var(--bg);

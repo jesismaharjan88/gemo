@@ -29,8 +29,10 @@ export default async function EventTabsLayout({
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
-      <EventDetailHeader event={event} />
-      <TabsNav eventId={id} />
+      <div className="print:hidden">
+        <EventDetailHeader event={event} />
+        <TabsNav eventId={id} />
+      </div>
       {children}
     </div>
   );

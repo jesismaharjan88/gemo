@@ -6,7 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
+import { submitResponse } from "@/app/actions/guest";
+import { GUEST_NAME_MAX, NOTES_MAX } from "@/lib/schemas/guest";
 
 const inputClass =
   "w-full px-3 py-2.5 rounded-[10px] text-sm outline-none border transition-colors";
@@ -58,7 +59,7 @@ function buildSchema(maxPicks: number) {
       .string()
       .trim()
       .min(1, "Please enter your name")
-      .max(80, "Name must be 80 characters or fewer"),
+      .max(GUEST_NAME_MAX, `Name must be ${GUEST_NAME_MAX} characters or fewer`),
     phone: z
       .string()
       .trim()
@@ -75,7 +76,7 @@ function buildSchema(maxPicks: number) {
     notes: z
       .string()
       .trim()
-      .max(500, "Notes must be 500 characters or fewer")
+      .max(NOTES_MAX, `Notes must be ${NOTES_MAX} characters or fewer`)
       .optional()
       .or(z.literal("")),
   });
@@ -121,22 +122,24 @@ export default function GuestForm({ eventId, slug, maxPicksPerGuest, menuItems }
 
   const onSubmit = useCallback(
     async (values: GuestFormValues) => {
-      const supabase = createClient();
-      const { data, error } = await supabase.rpc("insert_response", {
-        p_event_id: eventId,
-        p_guest_name: values.name.trim(),
-        p_guest_phone: values.phone || null,
-        p_notes: values.notes || null,
-        p_pick_ids: values.menuItemIds,
+      const result = await submitResponse({
+        eventId,
+        guestName:  values.name.trim(),
+        guestPhone: values.phone || null,
+        notes:      values.notes || null,
+        pickIds:    values.menuItemIds,
       });
 
-      if (error) {
-        toast.error("Couldn't submit your response. Try again or contact the host.");
+      if (!result.ok) {
+        if (result.errorKind === "rate_limited") {
+          toast.error("You're submitting too quickly — please wait a minute and try again.");
+        } else {
+          toast.error("Couldn't submit your response. Try again or contact the host.");
+        }
         return;
       }
 
-      const token = (data as { id: string; edit_token: string }).edit_token;
-      router.push(`/e/${slug}/thanks?t=${token}`);
+      router.push(`/e/${slug}/thanks?t=${result.editToken}`);
     },
     [eventId, slug, router]
   );
