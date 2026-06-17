@@ -18,10 +18,15 @@ export default function TabsNav({ eventId }: Props) {
 
   return (
     <div
-      className="border-b px-4"
-      style={{ backgroundColor: "var(--surface)", borderColor: "var(--border)" }}
+      className="border-b no-scrollbar"
+      style={{
+        backgroundColor: "var(--surface)",
+        borderColor: "var(--border)",
+        overflowX: "auto",
+        WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"],
+      }}
     >
-      <nav className="max-w-2xl mx-auto flex gap-1">
+      <nav className="max-w-2xl mx-auto flex gap-1 px-4" style={{ minWidth: "max-content" }}>
         {TABS.map(({ label, path }) => {
           const href = path(eventId);
           const isActive = pathname === href;
@@ -29,7 +34,7 @@ export default function TabsNav({ eventId }: Props) {
             <Link
               key={label}
               href={href}
-              className="text-sm font-medium px-3 py-3 border-b-2 transition-colors"
+              className="text-sm font-medium px-3 py-3 border-b-2 transition-colors whitespace-nowrap"
               style={{
                 borderColor: isActive ? "var(--green)" : "transparent",
                 color: isActive ? "var(--green-text)" : "var(--muted)",

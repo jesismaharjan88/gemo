@@ -84,3 +84,12 @@ body {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
+/* Scrollable container without a visible scrollbar — used for overflow tab bars */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
