@@ -34,12 +34,14 @@ export default function MenuItemCard({
   id,
   index,
   form,
+  categories,
   onRemove,
   nameRef,
 }: {
   id: string;
   index: number;
   form: UseFormReturn<EventFormValues>;
+  categories: string[];
   onRemove: () => void;
   nameRef?: (el: HTMLInputElement | null) => void;
 }) {
@@ -104,13 +106,16 @@ export default function MenuItemCard({
             style={inputStyle}
             {...register(`menuItems.${index}.description`)}
           />
-          <input
-            type="text"
-            placeholder="Category"
+          <select
             className={`${inputClass} w-36 flex-shrink-0`}
             style={inputStyle}
             {...register(`menuItems.${index}.category`)}
-          />
+          >
+            <option value="">No category</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
       </div>
 

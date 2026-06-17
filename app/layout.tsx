@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, DM_Serif_Display } from "next/font/google";
 import { Toaster } from "sonner";
+import { LoadingProvider } from "@/components/loading-overlay";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -32,7 +33,10 @@ export default function RootLayout({
       className={`${dmSans.variable} ${dmSerifDisplay.variable} h-full`}
     >
       <body className="min-h-full flex flex-col antialiased">
-        {children}
+        <LoadingProvider>
+          {children}
+        </LoadingProvider>
+        {/* Toaster sits outside the provider so error toasts appear above the overlay */}
         <Toaster richColors position="top-right" />
       </body>
     </html>

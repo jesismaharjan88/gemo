@@ -13,6 +13,7 @@ import { APP_NAME } from "@/lib/constants";
 import StepIndicator from "@/components/events/step-indicator";
 import EventFormStep1 from "@/components/events/event-form-step-1";
 import EventFormStep2 from "@/components/events/event-form-step-2";
+import { useLoadingOverlay } from "@/components/loading-overlay";
 import { useState } from "react";
 
 const DRAFT_KEY = "gemo.event-draft-v1";
@@ -41,6 +42,7 @@ function formatDateForReview(iso: string) {
 
 export default function NewEventPage() {
   const router = useRouter();
+  const { show: showLoading, hide: hideLoading } = useLoadingOverlay();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const hasHydrated = useRef(false);
@@ -111,7 +113,7 @@ export default function NewEventPage() {
   // Which step contains a given RHF field name?
   function stepForField(field: string): 1 | 2 | 3 {
     if ((STEP_1_FIELDS as readonly string[]).includes(field)) return 1;
-    if (field.startsWith("menuItems")) return 2;
+    if ((STEP_2_FIELDS as readonly string[]).includes(field) || field.startsWith("menuItems")) return 2;
     return 3;
   }
 
@@ -124,6 +126,7 @@ export default function NewEventPage() {
       return;
     }
 
+    showLoading();
     setIsSubmitting(true);
     const values = form.getValues();
     const slug = generateSlug(values.title);
@@ -159,6 +162,7 @@ export default function NewEventPage() {
     setIsSubmitting(false);
 
     if (error) {
+      hideLoading();
       const mapped = mapRpcError(error);
       if (mapped.redirect) {
         toast.error(mapped.message);
@@ -299,24 +303,61 @@ export default function NewEventPage() {
                     Edit
                   </button>
                 </div>
-                <ol
-                  className="rounded-[10px] divide-y"
-                  style={{ backgroundColor: "var(--bg)", border: "1px solid var(--border)" }}
-                >
-                  {values.menuItems.map((item, i) => (
-                    <li key={i} className="px-4 py-2.5 text-sm flex gap-3">
-                      <span className="font-medium" style={{ color: "var(--text)" }}>{item.name}</span>
-                      {item.category && (
-                        <span
-                          className="text-xs px-2 py-0.5 rounded-full self-center"
-                          style={{ backgroundColor: "var(--green-light)", color: "var(--green-text)" }}
-                        >
-                          {item.category}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ol>
+                {(() => {
+                  const grouped = new Map<string, typeof values.menuItems>();
+                  const uncategorized: typeof values.menuItems = [];
+                  for (const item of values.menuItems) {
+                    const cat = item.category?.trim() || "";
+                    if (cat) {
+                      if (!grouped.has(cat)) grouped.set(cat, []);
+                      grouped.get(cat)!.push(item);
+                    } else {
+                      uncategorized.push(item);
+                    }
+                  }
+                  const hasGroups = grouped.size > 0;
+                  const sections: Array<{ label: string | null; items: typeof values.menuItems }> = [
+                    ...[...grouped.entries()].map(([label, items]) => ({ label, items })),
+                    ...(uncategorized.length > 0
+                      ? [{ label: hasGroups ? "Other" : null, items: uncategorized }]
+                      : []),
+                  ];
+                  return (
+                    <div
+                      className="rounded-[10px] overflow-hidden"
+                      style={{ backgroundColor: "var(--bg)", border: "1px solid var(--border)" }}
+                    >
+                      {sections.map((section, si) => (
+                        <div key={si}>
+                          {section.label && (
+                            <div
+                              className="px-4 py-1.5 text-xs font-medium uppercase tracking-wide"
+                              style={{
+                                backgroundColor: "var(--surface)",
+                                color: "var(--muted)",
+                                borderBottom: "1px solid var(--border-med)",
+                                ...(si > 0 ? { borderTop: "1px solid var(--border-med)" } : {}),
+                              }}
+                            >
+                              {section.label}
+                            </div>
+                          )}
+                          <ol>
+                            {section.items.map((item, ii) => (
+                              <li
+                                key={ii}
+                                className="px-4 py-2.5 text-sm font-medium"
+                                style={{ color: "var(--text)" }}
+                              >
+                                {item.name}
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </section>
             </div>
           )}

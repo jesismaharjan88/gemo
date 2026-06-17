@@ -60,6 +60,13 @@ export const eventFormSchema = z
         });
       }
     }
+    if (data.menuItems.length > 0 && data.maxPicksPerGuest > data.menuItems.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Can't exceed the number of menu items (${data.menuItems.length})`,
+        path: ["maxPicksPerGuest"],
+      });
+    }
   });
 
 export type EventFormValues = z.infer<typeof eventFormSchema>;
@@ -69,11 +76,13 @@ export const STEP_1_FIELDS = [
   "venue",
   "eventDatetime",
   "description",
-  "maxPicksPerGuest",
   "responseDeadline",
 ] as const satisfies readonly (keyof EventFormValues)[];
 
-export const STEP_2_FIELDS = ["menuItems"] as const satisfies readonly (keyof EventFormValues)[];
+export const STEP_2_FIELDS = [
+  "maxPicksPerGuest",
+  "menuItems",
+] as const satisfies readonly (keyof EventFormValues)[];
 
 // Edit schema: same shape as EventFormValues but without "must be in the future" refinements.
 // Structurally identical TypeScript output — EventEditFormValues === EventFormValues at the type level.
@@ -115,6 +124,13 @@ export const eventEditFormSchema = z
           path: ["responseDeadline"],
         });
       }
+    }
+    if (data.menuItems.length > 0 && data.maxPicksPerGuest > data.menuItems.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Can't exceed the number of menu items (${data.menuItems.length})`,
+        path: ["maxPicksPerGuest"],
+      });
     }
   });
 

@@ -10,7 +10,6 @@ type Props = {
 };
 
 export default function MenuItemsCard({ menuItems }: Props) {
-  // Group by category preserving sort_order within each group.
   const hasCategories = menuItems.some((item) => item.category);
 
   const groups: { label: string | null; items: MenuItem[] }[] = [];
@@ -42,21 +41,26 @@ export default function MenuItemsCard({ menuItems }: Props) {
           No menu items added.
         </p>
       ) : (
-        <div className="space-y-4">
+        <div
+          className="rounded-[10px] overflow-hidden"
+          style={{ backgroundColor: "var(--bg)", border: "1px solid var(--border)" }}
+        >
           {groups.map((group, gi) => (
             <div key={gi}>
               {group.label && (
-                <p
-                  className="text-xs font-semibold uppercase tracking-wider mb-2"
-                  style={{ color: "var(--subtle)" }}
+                <div
+                  className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wider"
+                  style={{
+                    backgroundColor: "var(--surface)",
+                    color: "var(--muted)",
+                    borderBottom: "1px solid var(--border-med)",
+                    ...(gi > 0 ? { borderTop: "1px solid var(--border-med)" } : {}),
+                  }}
                 >
                   {group.label}
-                </p>
+                </div>
               )}
-              <ol
-                className="rounded-[10px] divide-y"
-                style={{ backgroundColor: "var(--bg)", border: "1px solid var(--border)" }}
-              >
+              <ol>
                 {group.items.map((item, i) => (
                   <li key={i} className="px-4 py-2.5 flex flex-col gap-0.5">
                     <span className="text-sm font-medium" style={{ color: "var(--text)" }}>

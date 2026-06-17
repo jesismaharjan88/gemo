@@ -94,23 +94,6 @@ export default function EventFormStep1({ form }: { form: UseFormReturn<EventForm
         <FieldError message={errors.responseDeadline?.message} />
       </div>
 
-      {/* Max picks */}
-      <div>
-        <Label htmlFor="maxPicksPerGuest">
-          Max picks per guest <span style={{ color: "#dc2626" }}>*</span>
-        </Label>
-        <input
-          id="maxPicksPerGuest"
-          type="number"
-          min={1}
-          max={10}
-          className={inputClass}
-          style={{ ...inputStyle, width: "6rem" }}
-          {...register("maxPicksPerGuest", { valueAsNumber: true })}
-        />
-        <FieldError message={errors.maxPicksPerGuest?.message} />
-      </div>
-
       {/* Description */}
       <div>
         <Label htmlFor="description">Description</Label>

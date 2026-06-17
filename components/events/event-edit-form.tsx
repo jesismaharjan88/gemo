@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +21,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { createClient } from "@/lib/supabase/client";
+import { useLoadingOverlay } from "@/components/loading-overlay";
 import { eventEditFormSchema, type EventEditFormValues } from "@/lib/schemas/event";
 import { APP_NAME } from "@/lib/constants";
 import MenuItemCard from "./menu-item-card";
@@ -92,6 +93,7 @@ type Props = {
 
 export default function EventEditForm({ event, menuItems, mode, responseCount }: Props) {
   const router = useRouter();
+  const { show: showLoading, hide: hideLoading } = useLoadingOverlay();
 
   const defaultValues: EventEditFormValues = {
     title: event.title,
@@ -129,6 +131,40 @@ export default function EventEditForm({ event, menuItems, mode, responseCount }:
   const { fields, append, remove, move } = useFieldArray({ control, name: "menuItems" });
   const newRowRef = useRef<HTMLInputElement | null>(null);
 
+  // Initialize categories from the loaded menu items' distinct category values
+  const [categories, setCategories] = useState<string[]>(() => {
+    const seen = new Set<string>();
+    const cats: string[] = [];
+    for (const item of defaultValues.menuItems) {
+      if (item.category && !seen.has(item.category)) {
+        seen.add(item.category);
+        cats.push(item.category);
+      }
+    }
+    return cats;
+  });
+  const [newCategory, setNewCategory] = useState("");
+
+  function addCategory() {
+    const trimmed = newCategory.trim();
+    if (!trimmed || categories.includes(trimmed)) {
+      setNewCategory("");
+      return;
+    }
+    setCategories((prev) => [...prev, trimmed]);
+    setNewCategory("");
+  }
+
+  function removeCategory(cat: string) {
+    const items = form.getValues("menuItems");
+    items.forEach((item, i) => {
+      if (item.category === cat) {
+        form.setValue(`menuItems.${i}.category`, "");
+      }
+    });
+    setCategories((prev) => prev.filter((c) => c !== cat));
+  }
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -149,6 +185,7 @@ export default function EventEditForm({ event, menuItems, mode, responseCount }:
 
   const onSubmit = useCallback(
     async (values: EventEditFormValues) => {
+      showLoading();
       const supabase = createClient();
 
       if (mode === "metadata") {
@@ -161,6 +198,7 @@ export default function EventEditForm({ event, menuItems, mode, responseCount }:
           p_response_deadline: new Date(values.responseDeadline).toISOString(),
         });
         if (error) {
+          hideLoading();
           toast.error("Couldn't update event. Try again.");
           return;
         }
@@ -180,6 +218,7 @@ export default function EventEditForm({ event, menuItems, mode, responseCount }:
           })),
         });
         if (error) {
+          hideLoading();
           toast.error("Couldn't update event. Try again.");
           return;
         }
@@ -188,7 +227,7 @@ export default function EventEditForm({ event, menuItems, mode, responseCount }:
       toast.success("Event updated.");
       router.push(`/dashboard/events/${event.id}`);
     },
-    [event.id, mode, router]
+    [event.id, mode, router, showLoading, hideLoading]
   );
 
   const arrayError =
@@ -299,25 +338,6 @@ export default function EventEditForm({ event, menuItems, mode, responseCount }:
               <FieldError message={errors.responseDeadline?.message} />
             </div>
 
-            {/* Max picks — full mode only */}
-            {mode === "full" && (
-              <div>
-                <Label htmlFor="maxPicksPerGuest">
-                  Max picks per guest <span style={{ color: "#dc2626" }}>*</span>
-                </Label>
-                <input
-                  id="maxPicksPerGuest"
-                  type="number"
-                  min={1}
-                  max={10}
-                  className={inputClass}
-                  style={{ ...inputStyle, width: "6rem" }}
-                  {...register("maxPicksPerGuest", { valueAsNumber: true })}
-                />
-                <FieldError message={errors.maxPicksPerGuest?.message} />
-              </div>
-            )}
-
             {/* Description */}
             <div>
               <Label htmlFor="description">Description</Label>
@@ -340,6 +360,28 @@ export default function EventEditForm({ event, menuItems, mode, responseCount }:
             <h2 className="text-lg font-medium" style={{ color: "var(--text)" }}>
               Menu items
             </h2>
+
+            {/* Max picks — shown in full mode only (locked when responses exist) */}
+            {mode === "full" && (
+              <div>
+                <Label htmlFor="maxPicksPerGuest">
+                  Max picks per guest <span style={{ color: "#dc2626" }}>*</span>
+                </Label>
+                <p className="text-xs mb-1" style={{ color: "var(--muted)" }}>
+                  How many items each guest can select — can&apos;t exceed the number of menu items
+                </p>
+                <input
+                  id="maxPicksPerGuest"
+                  type="number"
+                  min={1}
+                  max={10}
+                  className={inputClass}
+                  style={{ ...inputStyle, width: "6rem" }}
+                  {...register("maxPicksPerGuest", { valueAsNumber: true })}
+                />
+                <FieldError message={errors.maxPicksPerGuest?.message} />
+              </div>
+            )}
 
             {mode === "metadata" ? (
               <>
@@ -387,6 +429,61 @@ export default function EventEditForm({ event, menuItems, mode, responseCount }:
               </>
             ) : (
               <>
+                {/* Category management */}
+                <div>
+                  <p className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>
+                    Categories <span className="font-normal text-xs" style={{ color: "var(--muted)" }}>(optional)</span>
+                  </p>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="text"
+                      placeholder="e.g. Starters, Mains, Desserts"
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addCategory();
+                        }
+                      }}
+                      className="w-full px-3 py-2.5 rounded-[10px] text-sm outline-none border transition-colors"
+                      style={{ backgroundColor: "var(--bg)", borderColor: "var(--border-med)", color: "var(--text)" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={addCategory}
+                      className="px-4 py-2 rounded-[10px] text-sm font-medium flex-shrink-0 transition-colors"
+                      style={{ backgroundColor: "var(--green-light)", color: "var(--green-text)", border: "1px solid var(--green-border)" }}
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {categories.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {categories.map((cat) => (
+                        <span
+                          key={cat}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm"
+                          style={{ backgroundColor: "var(--green-light)", color: "var(--green-text)", border: "1px solid var(--green-border)" }}
+                        >
+                          {cat}
+                          <button
+                            type="button"
+                            onClick={() => removeCategory(cat)}
+                            aria-label={`Remove ${cat}`}
+                            className="text-xs leading-none"
+                            style={{ color: "var(--green-text)", opacity: 0.6 }}
+                            onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                            onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <p className="text-sm" style={{ color: "var(--muted)" }}>
                   Drag rows to reorder. At least one item is required.
                 </p>
@@ -413,6 +510,7 @@ export default function EventEditForm({ event, menuItems, mode, responseCount }:
                           id={field.id}
                           index={index}
                           form={formAsCreate}
+                          categories={categories}
                           onRemove={() => remove(index)}
                           nameRef={
                             index === fields.length - 1
