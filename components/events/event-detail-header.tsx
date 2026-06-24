@@ -1,26 +1,12 @@
 import Link from "next/link";
 import { APP_NAME } from "@/lib/constants";
+import LocalDateTime from "@/components/local-datetime";
 
 const STATUS_STYLES: Record<string, { label: string; bg: string; color: string }> = {
   active: { label: "Active", bg: "var(--green-light)", color: "var(--green-text)" },
   draft: { label: "Draft", bg: "#FEF3C7", color: "#92400E" },
   closed: { label: "Closed", bg: "#F3F4F6", color: "#6B7280" },
 };
-
-function formatDatetime(iso: string): string {
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
-}
 
 type Props = {
   event: {
@@ -89,7 +75,10 @@ export default function EventDetailHeader({ event }: Props) {
           </div>
 
           <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
-            {formatDatetime(event.event_datetime)}
+            <LocalDateTime
+              iso={event.event_datetime}
+              options={{ weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }}
+            />
             {event.venue_name && <> &middot; {event.venue_name}</>}
           </p>
         </div>

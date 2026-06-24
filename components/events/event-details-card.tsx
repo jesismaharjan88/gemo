@@ -1,18 +1,4 @@
-function formatDatetime(iso: string): string {
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      timeZoneName: "short",
-    }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
-}
+import LocalDateTime from "@/components/local-datetime";
 
 type Props = {
   event: {
@@ -51,8 +37,8 @@ export default function EventDetailsCard({ event }: Props) {
         {event.venue_name && (
           <Row label="Venue">{event.venue_name}</Row>
         )}
-        <Row label="Date &amp; time">{formatDatetime(event.event_datetime)}</Row>
-        <Row label="Response deadline">{formatDatetime(event.response_deadline)}</Row>
+        <Row label="Date &amp; time"><LocalDateTime iso={event.event_datetime} /></Row>
+        <Row label="Response deadline"><LocalDateTime iso={event.response_deadline} /></Row>
         <Row label="Max picks per guest">{event.max_picks_per_guest}</Row>
         {event.description && (
           <Row label="Description">

@@ -1,5 +1,6 @@
 import type { UseFormReturn } from "react-hook-form";
 import type { EventFormValues } from "@/lib/schemas/event";
+import TimezoneHint from "@/components/timezone-hint";
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
@@ -92,6 +93,7 @@ export default function EventFormStep1({ form }: { form: UseFormReturn<EventForm
           {...register("responseDeadline")}
         />
         <FieldError message={errors.responseDeadline?.message} />
+        <TimezoneHint />
       </div>
 
       {/* Description */}

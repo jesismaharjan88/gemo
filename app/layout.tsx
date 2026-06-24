@@ -32,7 +32,7 @@ export default function RootLayout({
       lang="en"
       className={`${dmSans.variable} ${dmSerifDisplay.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col antialiased">
+      <body className="min-h-full flex flex-col antialiased" suppressHydrationWarning>
         <LoadingProvider>
           {children}
         </LoadingProvider>

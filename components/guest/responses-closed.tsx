@@ -1,20 +1,5 @@
 import EventSummaryHeader from "./event-summary-header";
-
-function formatDatetime(iso: string): string {
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      timeZoneName: "short",
-    }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
-}
+import LocalDateTime from "@/components/local-datetime";
 
 type Props = {
   event: {
@@ -51,7 +36,7 @@ export default function ResponsesClosed({ event }: Props) {
           <p className="text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
             The host stopped accepting responses on{" "}
             <span className="font-medium" style={{ color: "var(--text)" }}>
-              {formatDatetime(event.response_deadline)}
+              <LocalDateTime iso={event.response_deadline} />
             </span>
             . If you think this is a mistake, contact the host directly.
           </p>

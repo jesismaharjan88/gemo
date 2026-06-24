@@ -25,6 +25,7 @@ import { useLoadingOverlay } from "@/components/loading-overlay";
 import { eventEditFormSchema, type EventEditFormValues } from "@/lib/schemas/event";
 import { APP_NAME } from "@/lib/constants";
 import MenuItemCard from "./menu-item-card";
+import TimezoneHint from "@/components/timezone-hint";
 import type { EventFormValues } from "@/lib/schemas/event";
 
 // Convert a UTC ISO string from Postgres to the YYYY-MM-DDTHH:mm format that
@@ -336,6 +337,7 @@ export default function EventEditForm({ event, menuItems, mode, responseCount }:
                 {...register("responseDeadline")}
               />
               <FieldError message={errors.responseDeadline?.message} />
+              <TimezoneHint />
             </div>
 
             {/* Description */}

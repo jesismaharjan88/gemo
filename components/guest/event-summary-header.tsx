@@ -1,20 +1,5 @@
 import { APP_NAME } from "@/lib/constants";
-
-function formatDatetime(iso: string): string {
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      timeZoneName: "short",
-    }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
-}
+import LocalDateTime from "@/components/local-datetime";
 
 type Props = {
   event: {
@@ -42,7 +27,7 @@ export default function EventSummaryHeader({ event }: Props) {
           {event.title}
         </h1>
         <p className="text-sm" style={{ color: "var(--muted)" }}>
-          {formatDatetime(event.event_datetime)}
+          <LocalDateTime iso={event.event_datetime} />
           {event.venue_name && <> &middot; {event.venue_name}</>}
         </p>
         {event.description && (
